@@ -2,7 +2,7 @@
 
 This is an example of how to make ansible playbook with the [flavienbwk/opensearch-docker-compose](https://github.com/flavienbwk/opensearch-docker-compose) repository.
 
-## Pre-requisite
+## Pre-requisites
 
 First, you need to have docker and docker-compose installed
 
