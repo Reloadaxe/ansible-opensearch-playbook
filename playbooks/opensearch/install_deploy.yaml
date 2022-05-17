@@ -1,0 +1,30 @@
+---
+- name: Opensearch Docker Compose Installation and Deployment
+  hosts: all
+  vars:
+    project_directory: "~/ansible-directory/opensearch"
+  tasks:
+    - name: Update vm.max_map_count variable to 500000
+      become: yes
+      ansible.posix.sysctl:
+        name: "vm.max_map_count"
+        value: "500000"
+
+    - name: Clone the project
+      command: "git clone 'git@github.com:flavienbwk/opensearch-docker-compose.git' {{ project_directory }}"
+
+    - name: Generate certificates
+      command: "chdir='{{ project_directory }}' bash generate-certs.sh"
+
+    - name: Pull images
+      command: "chdir='{{ project_directory }}' docker-compose pull"
+
+    - name: Start the clusters
+      command: "chdir='{{ project_directory }}' docker-compose up -d"
+
+    - name: Run admin security script
+      command: "chdir='{{ project_directory }}' docker-compose exec os01 bash -c 'chmod +x plugins/opensearch-security/tools/securityadmin.sh && bash plugins/opensearch-security/tools/securityadmin.sh -cd plugins/opensearch-security/securityconfig -icl -nhnv -cacert config/certificates/ca/ca.pem -cert config/certificates/ca/admin.pem -key config/certificates/ca/admin.key -h localhost'"
+      register: cmd_res
+      delay: 10
+      retries: 30
+      until: cmd_res.stdout_lines | list | count > 3
